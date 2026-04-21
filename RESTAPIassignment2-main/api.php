@@ -22,7 +22,9 @@ class Database {
 }
 
 class Create {
-    private $oid = 
-    private $name =
-    private $comment = 
+    private $oid = readline('Object ID: ');
+    private $name = readline('Name: ');
+    private $comment = readLine('Comment: ');
+
+    setcookie($name, $comment);
 }
