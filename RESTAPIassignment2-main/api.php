@@ -23,4 +23,6 @@ class Database {
 
 class Create {
     private $oid = 
+    private $name =
+    private $comment = 
 }
