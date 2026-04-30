@@ -1,6 +1,6 @@
 <?php 
 
-class Database {
+class API {
     private $servername = "brighton";
     private $username = "jmb181_commentuser";
     private $password = "str0ngpassw0rd";
@@ -15,12 +15,23 @@ class Database {
             $this->db
         );
 
-    if ($this->conn->connect_errno) {
-        die("Connection failed: " . $this->conn->connect_error);
-    }    
+        if ($this->conn->connect_errno) {
+            die("Connection failed: " . $this->conn->connect_error);
+        }    
     }
-}
 
-class Create {
-    private $oid = 
+    public function HandleRequest() {
+        $method = $_SERVER['REQUEST_METHOD'];
+        if ($method === 'GET') {
+
+        }
+
+        else if ($method === 'POST') {
+
+        }
+
+        else {
+
+        }
+    }
 }
