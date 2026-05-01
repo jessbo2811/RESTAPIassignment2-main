@@ -8,18 +8,18 @@ class API {
     public $conn = null;
 
     public function __construct() {
-        $this->conn = new mysqli(
-            $this->servername,
-            $this->username,
-            $this->password,
-            $this->db
-        );
-
-        if ($this->conn->connect_errno) {
+        try {
+            $this->conn = new mysqli(
+                $this->servername,
+                $this->username,
+                $this->password,
+                $this->db
+            );
+        } catch (mysqli_sql_exception $e) {
             http_response_code(500);
             exit;
-        }    
     }
+}
 
     public function HandleRequest() {
         header("Content-Type: application/json; charset=UTF-8");
@@ -39,16 +39,16 @@ class API {
     }
 
     public function Create() {
-        $oid = (trim($_POST['oid']));
-        $name = (trim($_POST['name'])) ?? null;
-        $comment = (trim($_POST['comment']));
+        $oid = isset($_POST['oid']) ? htmlspecialchars(strip_tags(trim($_POST['oid']))) : null;
+        $name = isset($_POST['name']) ? htmlspecialchars(strip_tags(trim($_POST['name']))) : null;
+        $comment = isset($_POST['comment']) ? htmlspecialchars(strip_tags(trim($_POST['comment']))) : null;
 
-        if (empty($oid) || strlen($oid) > 32 || !ctype_alnum($oid)) { {
+        if (empty($oid) || strlen($oid) > 32 || !ctype_alnum($oid)) { 
             http_response_code(400);
             exit;
         }
 
-        if (!empty($name) && strlen($name) > 64) {
+        if (!empty($name) && (strlen($name) < 1 || strlen($name) > 64)) {
             http_response_code(400);
             exit;
         }
@@ -58,33 +58,41 @@ class API {
             exit;
         }
 
-        $stmt = $this->mysqli->prepare("INSERT INTO tComments (objectId, name, comment) VALUES (?, ?, ?)");
+        $stmt = $this->conn->prepare("INSERT INTO tComments (objectId, name, comment) VALUES (?, ?, ?)");
         $stmt->bind_param("sss", $oid, $name, $comment);
         $stmt->execute();
         http_response_code(201);
         exit;
     }
-    }  
+      
 
     public function Read() {
-        $oid = (trim($_GET['oid']));
+        $oid = isset($_GET['oid']) ? htmlspecialchars(strip_tags(trim($_GET['oid']))) : null;
 
         if (empty($oid) || strlen($oid) > 32 || !ctype_alnum($oid)) { 
             http_response_code(400);
             exit;
         }
 
-        $stmt = $this->mysqli->prepare("SELECT * FROM tComments WHERE objectId = ?");
+        $stmt = $this->conn->prepare("SELECT * FROM tComments WHERE objectId = ?");
         $stmt->bind_param("s", $oid);
         $stmt->execute();
-        $stmt->store_result();
 
-        if ($stmt->num_rows > 0) {
-            http_response_code(200); 
-            
+        $result = $stmt->get_result(); // get a result object you can iterate
+
+        if ($result->num_rows > 0) {
+            http_response_code(200);
+            $rows = [];
+            while ($row = $result->fetch_assoc()) {
+                $rows[] = $row;
+            }
+            echo json_encode($rows);
         } else {
-            http_response_code(204); 
+            http_response_code(204);
         }
         exit;
-    }
 }
+}
+
+$api = new API();
+$api->HandleRequest();
