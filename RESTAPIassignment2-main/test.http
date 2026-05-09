@@ -1,3 +1,33 @@
-<?php
-echo "PHP is working";
-?>
+### POST with oid over 32 chars → expect 400
+### POST with name as empty string → expect 400
+### GET with valid oid that has no comments → expect 204
+### GET missing oid → expect 400
+### PUT or DELETE request → expect 405
+
+### Return valid oid, name, comment - expects 201
+POST https://jmb181.brighton.domains/WebAppDev2/api.php
+Content-Type: application/x-www-form-urlencoded
+
+oid=01sie723w8&name=Test User 3&comment=What an artefact
+
+### Post request with one missing field - expects 400
+POST https://jmb181.brighton.domains/WebAppDev2/api.php
+Content-Type: application/x-www-form-urlencoded
+
+oid=ldfkj5oei&name=Test User 4
+
+### Post request with oid containing special characters - expects 400
+POST https://jmb181.brighton.domains/WebAppDev2/api.php
+Content-Type: application/x-www-form-urlencoded
+
+oid=i8sdf3!!8&name=Test User 4&comment=Love this artefact
+
+### Post request with oid having more than 32 characters - expects 400
+POST https://jmb181.brighton.domains/WebAppDev2/api.php
+Content-Type: application/x-www-form-urlencoded
+
+oid=i8sdf3!!8&name=Test User 4&comment=Love this artefact
+
+### Get comments for an object with valid oid - expects 200
+GET https://jmb181.brighton.domains/WebAppDev2/api.php?oid=01y6e7w8
+Content-Type: application/json

@@ -58,10 +58,10 @@ class API {
             $stmt->bind_param("sss", $oid, $name, $comment);
             $stmt->execute();
 
-            if ($stmt->affected_rows > 0) {
-                header("Content-Type: application/json; charset=UTF-8");
-                echo json_encode($oid);
-            } else {
+        if ($stmt->affected_rows > 0) {
+            header("Content-Type: application/json; charset=UTF-8");
+            echo json_encode(["id" => $stmt->insert_id]);
+        } else {
                 $this->responseCode = 500;
             }
         }
