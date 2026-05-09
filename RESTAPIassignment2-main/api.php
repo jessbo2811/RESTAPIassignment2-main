@@ -25,11 +25,11 @@ class API {
         header("Content-Type: application/json; charset=UTF-8");
         $method = $_SERVER['REQUEST_METHOD'];
         if ($method === 'GET') {
-            $this->Read();
+            $this->read();
         }
 
         else if ($method === 'POST') {
-           $this->Create();
+           $this->create();
         }
 
         else {
@@ -38,14 +38,21 @@ class API {
         }
     }
 
-    public function Create() {
-        $oid = isset($_POST['oid']) ? htmlspecialchars(strip_tags(trim($_POST['oid']))) : null;
-        $name = isset($_POST['name']) ? htmlspecialchars(strip_tags(trim($_POST['name']))) : null;
-        $comment = isset($_POST['comment']) ? htmlspecialchars(strip_tags(trim($_POST['comment']))) : null;
+    public function create() {
 
-        if (empty($oid) || strlen($oid) > 32 || !ctype_alnum($oid)) { 
-            http_response_code(400);
-            exit;
+        $this->responseCode = 201; 
+
+        if (isset($_POST['oid']) && isset($_POST['comment']) && isset($_POST['name'])) {
+            $oid = trim($_POST['oid']);
+            $comment = trim($_POST['comment']);
+            $name = trim($_POST['name']);
+        }
+        else {
+            $this->responseCode = 400;
+        }
+
+        if (strlen($oid) > 32 || !ctype_alnum($oid)) { 
+            $this->responseCode = 400;
         }
 
         if (!empty($name) && (strlen($name) < 1 || strlen($name) > 64)) {
@@ -58,25 +65,42 @@ class API {
             exit;
         }
 
-        $stmt = $this->conn->prepare("INSERT INTO tComments (objectId, name, comment) VALUES (?, ?, ?)");
-        $stmt->bind_param("sss", $oid, $name, $comment);
-        $stmt->execute();
-        http_response_code(201);
-        exit;
+            $stmt = $this->conn->prepare("INSERT INTO tComments (oid, name, comment) VALUES (?, ?, ?)");
+            $stmt->bind_param("sss", $oid, $name, $comment);
+            $stmt->execute();
+
+            $result = $stmt->get_result();
+
+            if ($result->num_rows > 0) {
+                header("Content-Type: application/json; charset=UTF-8");
+                echo json_encode($oid);
+            } else {
+                $this->responseCode = 500;
+            }
+
+        };
     }
       
 
-    public function Read() {
-        $oid = isset($_GET['oid']) ? htmlspecialchars(strip_tags(trim($_GET['oid']))) : null;
+    public function read() {
 
-        if (empty($oid) || strlen($oid) > 32 || !ctype_alnum($oid)) { 
-            http_response_code(400);
-            exit;
+        private $responseCode = 200;
+
+        if (isset($_POST['oid'])) {
+            $oid = trim($_POST['oid']);
         }
 
-        $stmt = $this->conn->prepare("SELECT * FROM tComments WHERE objectId = ?");
-        $stmt->bind_param("s", $oid);
-        $stmt->execute();
+        else {
+            $responseCode = 400;
+        }
+
+        if (strlen($oid) > 32 || !ctype_alnum($oid)) { 
+            $responseCode = 400;
+        }
+        if ($responseCode == 200) {
+            $stmt = $this->conn->prepare("SELECT * FROM tComments WHERE oid = ?");
+            $stmt->bind_param("s", $oid);
+            $stmt->execute();
 
         $result = $stmt->get_result();
 
