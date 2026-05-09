@@ -97,7 +97,7 @@ class API {
             $this->responseCode = 400;
         }
         if ($this->responseCode == 200) {
-            $stmt = $this->conn->prepare("SELECT * FROM tComments WHERE oid = ?");
+            $stmt = $this->conn->prepare("SELECT * FROM tComments WHERE oid = ? ORDER BY cDate ASC");
             $stmt->bind_param("s", $oid);
             $stmt->execute();
 
