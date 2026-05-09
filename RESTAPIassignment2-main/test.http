@@ -1,9 +1,3 @@
-### POST with oid over 32 chars → expect 400
-### POST with name as empty string → expect 400
-### GET with valid oid that has no comments → expect 204
-### GET missing oid → expect 400
-### PUT or DELETE request → expect 405
-
 ### Return valid oid, name, comment - expects 201
 POST https://jmb181.brighton.domains/WebAppDev2/api.php
 Content-Type: application/x-www-form-urlencoded
@@ -26,8 +20,27 @@ oid=i8sdf3!!8&name=Test User 4&comment=Love this artefact
 POST https://jmb181.brighton.domains/WebAppDev2/api.php
 Content-Type: application/x-www-form-urlencoded
 
-oid=i8sdf3!!8&name=Test User 4&comment=Love this artefact
+oid=i8sdf3sdfhsdifhsdjkfhiuaofhdsjf8ert&name=Test User 4&comment=Enjoy this artefact
+
+### Post request with the name as an empty string - expects 400
+POST https://jmb181.brighton.domains/WebAppDev2/api.php
+Content-Type: application/x-www-form-urlencoded
+
+oid=d9d7sfs&name=&comment=Like this artefact
+
+### Get comment with a valid oid but no comments - expects 204
+GET https://jmb181.brighton.domains/WebAppDev2/api.php?oid=d9d7sfs
+Content-Type: application/json
+
+### Get comment with a missing oid - expects 400
+GET https://jmb181.brighton.domains/WebAppDev2/api.php?oid=
 
 ### Get comments for an object with valid oid - expects 200
 GET https://jmb181.brighton.domains/WebAppDev2/api.php?oid=01y6e7w8
 Content-Type: application/json
+
+### Delete request - expects 405
+DELETE https://jmb181.brighton.domains/WebAppDev2/api.php
+
+### PUT request - expects 405
+PUT https://jmb181.brighton.domains/WebAppDev2/api.php
