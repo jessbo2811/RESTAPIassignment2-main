@@ -58,16 +58,21 @@ class API {
         }
 
         if ($this->responseCode == 201) {
-            $stmt = $this->conn->prepare("INSERT INTO tComments (oid, name, comment) VALUES (?, ?, ?)");
-            $stmt->bind_param("sss", $oid, $name, $comment);
-            $stmt->execute();
+            try {
+                $stmt = $this->conn->prepare("INSERT INTO tComments (oid, name, comment) VALUES (?, ?, ?)");
+                $stmt->bind_param("sss", $oid, $name, $comment);
+                $stmt->execute();
 
-        if ($stmt->affected_rows > 0) {
-            header("Content-Type: application/json; charset=UTF-8");
-            echo json_encode(["id" => $stmt->insert_id]);
-        } else {
+            if ($stmt->affected_rows > 0) {
+                header("Content-Type: application/json; charset=UTF-8");
+                echo json_encode(["id" => $stmt->insert_id]);
+            } else {
                 $this->responseCode = 500;
             }
+            } catch (mysqli_sql_exception $e) {
+                $this->responseCode = 500;
+            }
+
         }
     }
 
@@ -85,30 +90,34 @@ class API {
         }
 
         if ($this->responseCode == 200) {
-            $stmt = $this->conn->prepare("SELECT * FROM tComments WHERE oid = ? ORDER BY cDate ASC");
-            $stmt->bind_param("s", $oid);
-            $stmt->execute();
+            try {
+                $stmt = $this->conn->prepare("SELECT * FROM tComments WHERE oid = ? ORDER BY cDate ASC");
+                $stmt->bind_param("s", $oid);
+                $stmt->execute();
 
-            $result = $stmt->get_result();
+                $result = $stmt->get_result();
 
-            if ($result->num_rows > 0) {
-                $rows = [];
-                while ($row = $result->fetch_assoc()) {
-                    $rows[] = [
-                        "id" => (int)$row['id'],
-                        "date" => date('d F Y', strtotime($row['cDate'])),
-                        "name" => $row['name'],
-                        "comment" => $row['comment']
+                if ($result->num_rows > 0) {
+                    $rows = [];
+                    while ($row = $result->fetch_assoc()) {
+                        $rows[] = [
+                            "id" => (int)$row['id'],
+                            "date" => date('d F Y', strtotime($row['cDate'])),
+                            "name" => $row['name'],
+                            "comment" => $row['comment']
+                        ];
+                    }
+                    $response = [
+                        "oid" => $oid,
+                        "comments" => $rows
                     ];
+                    header("Content-Type: application/json; charset=UTF-8");
+                    echo json_encode($response);
+                } else {
+                    $this->responseCode = 204;
                 }
-                $response = [
-                    "oid" => $oid,
-                    "comments" => $rows
-                ];
-                header("Content-Type: application/json; charset=UTF-8");
-                echo json_encode($response);
-            } else {
-                $this->responseCode = 204;
+            } catch (mysqli_sql_exception $e) {
+                $this->responseCode = 500;
             }
         }
     }

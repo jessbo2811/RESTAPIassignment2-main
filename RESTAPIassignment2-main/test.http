@@ -1,49 +1,60 @@
 ### Return valid oid, name, comment - expects 201
+# Tests path for creating a new comment with valid parameters
 POST https://jmb181.brighton.domains/WebAppDev2/api.php
 Content-Type: application/x-www-form-urlencoded
 
 oid=01sie723w8&name=Test User 3&comment=What an artefact
 
 ### Post request with one missing field - expects 400
+# Ensures a missing required field, etc a comment will return a bad error request
 POST https://jmb181.brighton.domains/WebAppDev2/api.php
 Content-Type: application/x-www-form-urlencoded
 
 oid=ldfkj5oei&name=Test User 4
 
 ### Post request with oid containing special characters - expects 400
+# Tests that the oid being invalid etc containing special characters will retusn a bad error request
 POST https://jmb181.brighton.domains/WebAppDev2/api.php
 Content-Type: application/x-www-form-urlencoded
 
 oid=i8sdf3!!8&name=Test User 4&comment=Love this artefact
 
 ### Post request with oid having more than 32 characters - expects 400
+# Tests that the oid being invalid etc length exceeds 32 characters will return a bad error request
 POST https://jmb181.brighton.domains/WebAppDev2/api.php
 Content-Type: application/x-www-form-urlencoded
 
 oid=i8sdf3sdfhsdifhsdjkfhiuaofhdsjf8ert&name=Test User 4&comment=Enjoy this artefact
 
 ### Post request with the name as an empty string - expects 400
+# Ensures that not sending a name to the db will return a bad error request
 POST https://jmb181.brighton.domains/WebAppDev2/api.php
 Content-Type: application/x-www-form-urlencoded
 
 oid=d9d7sfs&name=&comment=Like this artefact
 
 ### Get comment with a valid oid but no comments - expects 204
+# Tests that putting in a valid oid with no comments will return the no content error code
 GET https://jmb181.brighton.domains/WebAppDev2/api.php?oid=d9d7sfs
 Content-Type: application/json
 
 ### Get comment with a missing oid - expects 400
+# Tests that not putting an oid for the get request returns a bad error reuqest
 GET https://jmb181.brighton.domains/WebAppDev2/api.php?oid=
 
 ### Get comment with an invalid oid - expects 400
+# Tests that putting an invalid oid returns a bad error request
 GET https://jmb181.brighton.domains/WebAppDev2/api.php?oid=01y6e7w8!!
 
 ### Get comments for an object with valid oid - expects 200
+# Tests that putting a valid oid with a comment will return all parameters formatted correctly
 GET https://jmb181.brighton.domains/WebAppDev2/api.php?oid=01y6e7w8
 Content-Type: application/json
 
 ### Delete request - expects 405
+# Tests that methods that aren't get or post (such as delete) throw a "method not allowed" error request
 DELETE https://jmb181.brighton.domains/WebAppDev2/api.php
 
 ### PUT request - expects 405
+# Tests that methods that aren't get or post (such as put) throw a "method not allowed" error request
 PUT https://jmb181.brighton.domains/WebAppDev2/api.php
