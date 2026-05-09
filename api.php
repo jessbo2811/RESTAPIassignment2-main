@@ -1,11 +1,12 @@
 <?php 
 
 class API {
-    private $servername = "brighton";
+    private $servername = "brighton"; // The connection to the SQL database
     private $username = "jmb181_commentuser";
     private $password = "str0ngpassw0rd";
     private $db = "jmb181_VAMuseumComments";
     public $conn = null;
+    public $responseCode = null;
 
     public function __construct() {
         try {
@@ -21,8 +22,8 @@ class API {
     }
 }
 
-    public function HandleRequest() {
-        header("Content-Type: application/json; charset=UTF-8");
+    public function handleRequest() {
+
         $method = $_SERVER['REQUEST_METHOD'];
         if ($method === 'GET') {
             $this->Read();
@@ -33,65 +34,91 @@ class API {
         }
 
         else {
-            http_response_code(405);
-            exit;
+            $this->responseCode = 405;
         }
+
+        http_response_code($this->responseCode);
+
     }
 
-    public function Create() {
-        $oid = isset($_POST['oid']) ? htmlspecialchars(strip_tags(trim($_POST['oid']))) : null;
-        $name = isset($_POST['name']) ? htmlspecialchars(strip_tags(trim($_POST['name']))) : null;
-        $comment = isset($_POST['comment']) ? htmlspecialchars(strip_tags(trim($_POST['comment']))) : null;
+    public function create() {
 
-        if (empty($oid) || strlen($oid) > 32 || !ctype_alnum($oid)) { 
-            http_response_code(400);
-            exit;
+        $this->responseCode = 201; 
+
+        if (isset($_POST['oid']) && isset($_POST['comment'])) {
+            $oid = trim($_POST['oid']);
+            $comment = trim($_POST['comment']);
+        }
+        else {
+            $this->responseCode = 400;
         }
 
-        if (!empty($name) && (strlen($name) < 1 || strlen($name) > 64)) {
-            http_response_code(400);
-            exit;
-        }
-        
-        if (empty($comment)) {
-            http_response_code(400);
-            exit;
+        if (isset($_POST['name'])) {
+            $name = trim($_POST['name']);
         }
 
-        $stmt = $this->conn->prepare("INSERT INTO tComments (objectId, name, comment) VALUES (?, ?, ?)");
-        $stmt->bind_param("sss", $oid, $name, $comment);
-        $stmt->execute();
-        http_response_code(201);
-        exit;
+        if (strlen($oid) > 32 || !ctype_alnum($oid)) { 
+            $this->responseCode = 400;
+        }
+
+        if (strlen($name) < 1 || strlen($name) > 64) {
+            $this->responseCode = 400;
+        }
+
+        if ($this->responseCode == 201) {
+
+            $stmt = $this->conn->prepare("INSERT INTO tComments (objectId, name, comment) VALUES (?, ?, ?)");
+            $stmt->bind_param("sss", $oid, $name, $comment);
+            $stmt->execute();
+
+            $result = $stmt->get_result();
+
+            if ($result->num_rows > 0) {
+                header("Content-Type: application/json; charset=UTF-8");
+                echo json_encode($oid);
+            } else {
+                $this->responseCode = 500;
+            }
+
+        };
     }
       
 
-    public function Read() {
-        $oid = isset($_GET['oid']) ? htmlspecialchars(strip_tags(trim($_GET['oid']))) : null;
+    public function read() {
 
-        if (empty($oid) || strlen($oid) > 32 || !ctype_alnum($oid)) { 
-            http_response_code(400);
-            exit;
+        private $responseCode = 200;
+
+        if (isset($_POST['oid'])) {
+            $oid = trim($_POST['oid']);
         }
 
-        $stmt = $this->conn->prepare("SELECT * FROM tComments WHERE objectId = ?");
-        $stmt->bind_param("s", $oid);
-        $stmt->execute();
+        else {
+            $responseCode = 400;
+        }
 
-        $result = $stmt->get_result(); // get a result object you can iterate
+        if (strlen($oid) > 32 || !ctype_alnum($oid)) { 
+            $responseCode = 400;
+        }
+        if ($responseCode == 200) {
+            $stmt = $this->conn->prepare("SELECT * FROM tComments WHERE objectId = ?");
+            $stmt->bind_param("s", $oid);
+            $stmt->execute();
 
-        if ($result->num_rows > 0) {
-            http_response_code(200);
-            $rows = [];
-            while ($row = $result->fetch_assoc()) {
-                $rows[] = $row;
+            $result = $stmt->get_result();
+
+            if ($result->num_rows > 0) {
+                $rows = [];
+                while ($row = $result->fetch_assoc()) {
+                    $row['cDate'] = date('d F Y', strtotime($row['cDate']));
+                    $rows[] = $row;
+                }
+                header("Content-Type: application/json; charset=UTF-8");
+                echo json_encode($rows);
+            } else {
+                $responseCode = 204;
             }
-            echo json_encode($rows);
-        } else {
-            http_response_code(204);
+        }   
         }
-        exit;
-}
 }
 
 $api = new API();
